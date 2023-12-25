@@ -3,8 +3,9 @@ import java.awt.event.KeyEvent;
 
 public class Bird extends Rectangle {
 
-    static final int FALLING_SPEED=4;
-    boolean falling=true;
+    private static final int FALLING_SPEED=4;
+    private static final int FLYING_SPEED=-4;
+    private boolean falling=true;
     private static final Color BIRD_COLOR=new Color(206, 128, 18);
 
     Bird(int x,int y,int width,int height){
@@ -18,7 +19,7 @@ public class Bird extends Rectangle {
     }
 
     public void fly(){
-        y-=4;
+        y+=FLYING_SPEED;
     }
 
     public void keepFalling(){

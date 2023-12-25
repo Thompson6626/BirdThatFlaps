@@ -1,11 +1,8 @@
 import java.awt.*;
-import java.util.LinkedList;
-import java.util.Queue;
 
 public class Pipes extends Rectangle {
 
-    private static final int SPEED=-3;
-    static Queue<Pipes> pipesQueue= new LinkedList<>();
+    private static final int SPEED=-3; // - left | + right
 
     Pipes(int x, int y, int width, int height){
         super(x,y,width,height);

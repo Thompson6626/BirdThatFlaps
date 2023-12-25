@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.Queue;
 public class GamePanel extends JPanel implements Runnable {
@@ -16,19 +17,30 @@ public class GamePanel extends JPanel implements Runnable {
     Image image;
     Graphics graphics;
     Bird bird;
-    Queue<Pipes> pipesQueue2=Pipes.pipesQueue;
+    static Queue<Pipes> pipesQueue2= new LinkedList<>();
+    static Queue<Timer> timers;
 
-    final static int BIRD_DIAMETER=20;
+    final static int BIRD_DIAMETER=40;
     final static int MINIMUM_PIPE_HEIGHT=100;
     final static int PIPE_WIDTH=80;
-    final static int SPACE_BETWEEN_PIPES=150;
+    final static int SPACE_BETWEEN_PIPES=200;
 
     GamePanel(){
         this.setPreferredSize(SCREEN_SIZE);
         this.setFocusable(true);
+        this.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                bird.keyPressed(e);
+                createTimerForFlying();
+            }
+        });
+
 
         newBird();
         newPipes();
+
+
+        timers= new LinkedList<>();
 
         gameThread=new Thread(this);
         gameThread.start();
@@ -73,7 +85,7 @@ public class GamePanel extends JPanel implements Runnable {
         image = createImage(getWidth(),getHeight());
         graphics = image.getGraphics();
         draw(graphics);
-        g.drawImage(image,0,0,this);  // ? "this" is the JPanel called GamePanel
+        g.drawImage(image,0,0,this);
     }
 
     public void draw(Graphics g){
@@ -87,25 +99,50 @@ public class GamePanel extends JPanel implements Runnable {
         for(Pipes pipe:pipesQueue2){
             pipe.move();
         }
-        if(!bird.isFalling()){
+        if(bird.isFalling()){
             bird.fall();
         }else{
             bird.fly();
         }
-
     }
 
+    public void createTimerForFlying(){
+        Timer timer = new Timer(480, e ->
+                bird.keepFalling()
+        );
+        if(!timers.isEmpty()){
+            timers.poll().stop();
+        }
+        timers.offer(timer);
+        timer.setRepeats(false); // Repeats only once
+        timer.start();
+    }
+
+
+
     public void checkBirdCollision(){
-        if(bird.y<=-BIRD_DIAMETER){
+        if(bird.y<=0){ // So that the bird doesnt go
             bird.y=0;
         }
+        for(Pipes pipes:pipesQueue2){
+            if(bird.intersects(pipes)){
+                gameOver();
+            }
+        }
 
+        if(bird.y>=GAME_HEIGHT){
+            gameOver();
+        }
+    }
+    public void gameOver(){
+
+        gameThread.interrupt();
     }
 
     public void checkPipeOutOfBounds(){
         if (!pipesQueue2.isEmpty() && pipesQueue2.peek().x <= -PIPE_WIDTH) {
-            pipesQueue2.poll();
-            pipesQueue2.poll();
+            pipesQueue2.poll(); // Upper pipe
+            pipesQueue2.poll(); // Lower pipe
         }
     }
 
@@ -113,29 +150,23 @@ public class GamePanel extends JPanel implements Runnable {
     @Override
     public void run(){
 
-        long lastTime = System.nanoTime();
-        double amountOfTicks= 60.0;
-        double ns= 1000000000/amountOfTicks;
-        double delta=0;
+            long lastTime = System.nanoTime();
+            double amountOfTicks = 60.0;
+            double ns = 1000000000 / amountOfTicks;
+            double delta = 0;
 
-        while(true){
-            long now = System.nanoTime();
-            delta +=(now-lastTime)/ns;
-            lastTime= now;
-            if(delta >=1){
-                move();
-                checkBirdCollision();
-                checkPipeOutOfBounds();
-                repaint();
-                delta--;
+            while (true) {
+                long now = System.nanoTime();
+                delta += (now - lastTime) / ns;
+                lastTime = now;
+                if (delta >= 1) {
+                    move();
+                    checkBirdCollision();
+                    checkPipeOutOfBounds();
+                    repaint();
+                    delta--;
+                }
             }
-        }
-    }
-
-    public class KA extends KeyAdapter{
-        public void keyPressed(KeyEvent e){
-            bird.keyPressed(e);
-        }
     }
 
 }
