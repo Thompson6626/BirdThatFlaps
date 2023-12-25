@@ -7,8 +7,8 @@ import java.util.Random;
 import java.util.Queue;
 public class GamePanel extends JPanel implements Runnable {
 
-    final static int GAME_HEIGHT=1000;
-    final static int GAME_WIDTH=(int)(GAME_HEIGHT*(0.888888));
+    final static int GAME_HEIGHT=700;
+    final static int GAME_WIDTH=(int)(GAME_HEIGHT*(1.1));
     final static Dimension SCREEN_SIZE= new Dimension(GAME_WIDTH,GAME_HEIGHT);
 
     Random random;
@@ -22,7 +22,7 @@ public class GamePanel extends JPanel implements Runnable {
     static Queue<Timer> timers;
     static boolean gameOver=false;
 
-    final static int BIRD_DIAMETER=40;
+    final static int BIRD_DIAMETER=35;
     final static int MINIMUM_PIPE_HEIGHT=100;
     final static int PIPE_WIDTH=80;
     final static int SPACE_BETWEEN_PIPES=200;
@@ -138,7 +138,7 @@ public class GamePanel extends JPanel implements Runnable {
             }
         }
 
-        if(bird.y>=GAME_HEIGHT){
+        if(bird.y>=GAME_HEIGHT-BIRD_DIAMETER){
             gameOver();
         }
     }
@@ -150,7 +150,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void checkPipeOutOfBounds(){
         if (!pipesQueue2.isEmpty() && pipesQueue2.peek().x <= -PIPE_WIDTH) {
             pipesQueue2.poll(); // Upper pipe
-            pipesQueue2.poll(); // Lower pipe
+            pipesQueue2.poll();// Lower pipe
         }
     }
 

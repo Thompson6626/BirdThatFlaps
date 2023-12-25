@@ -13,11 +13,11 @@ public class Score extends Rectangle {
         Score.GAME_WIDTH=GAME_WIDTH;
     }
 
-    public void draw(Graphics g,boolean normal){
+    public void draw(Graphics g,boolean gameRunning){
         g.setColor(TEXT_COLOR);
         g.setFont(TEXT_FONT);
 
-        if(normal){
+        if(gameRunning){
             g.drawString(String.valueOf(points),(GAME_WIDTH/2)-10,50);
         }else{
             g.drawString("GAME OVER",(GAME_WIDTH/2)-170,50);
