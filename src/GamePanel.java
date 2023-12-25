@@ -17,8 +17,10 @@ public class GamePanel extends JPanel implements Runnable {
     Image image;
     Graphics graphics;
     Bird bird;
+    Score score;
     static Queue<Pipes> pipesQueue2= new LinkedList<>();
     static Queue<Timer> timers;
+    static boolean gameOver=false;
 
     final static int BIRD_DIAMETER=40;
     final static int MINIMUM_PIPE_HEIGHT=100;
@@ -26,8 +28,12 @@ public class GamePanel extends JPanel implements Runnable {
     final static int SPACE_BETWEEN_PIPES=200;
 
     GamePanel(){
+        score= new Score(GAME_WIDTH,GAME_HEIGHT);
+        newBird();
+        newPipes();
+
+
         this.setPreferredSize(SCREEN_SIZE);
-        this.setFocusable(true);
         this.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 bird.keyPressed(e);
@@ -36,8 +42,6 @@ public class GamePanel extends JPanel implements Runnable {
         });
 
 
-        newBird();
-        newPipes();
 
 
         timers= new LinkedList<>();
@@ -51,6 +55,7 @@ public class GamePanel extends JPanel implements Runnable {
         });
         timer.start();
 
+        this.setFocusable(true);
     }
     public void newBird(){
         bird= new Bird(200,(GAME_HEIGHT/2)-BIRD_DIAMETER,BIRD_DIAMETER,BIRD_DIAMETER);
@@ -93,7 +98,7 @@ public class GamePanel extends JPanel implements Runnable {
             pipe.draw(g);
         }
         bird.draw(g);
-
+        score.draw(g,!gameOver);
     }
     public void move(){
         for(Pipes pipe:pipesQueue2){
@@ -104,10 +109,13 @@ public class GamePanel extends JPanel implements Runnable {
         }else{
             bird.fly();
         }
+        if(!pipesQueue2.isEmpty()&& bird.x == pipesQueue2.peek().x) {
+            Score.points++;
+        }
     }
 
     public void createTimerForFlying(){
-        Timer timer = new Timer(480, e ->
+        Timer timer = new Timer(400, e ->
                 bird.keepFalling()
         );
         if(!timers.isEmpty()){
@@ -135,7 +143,7 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
     public void gameOver(){
-
+        gameOver=true;
         gameThread.interrupt();
     }
 
@@ -155,7 +163,7 @@ public class GamePanel extends JPanel implements Runnable {
             double ns = 1000000000 / amountOfTicks;
             double delta = 0;
 
-            while (true) {
+            while (!gameOver) {
                 long now = System.nanoTime();
                 delta += (now - lastTime) / ns;
                 lastTime = now;
