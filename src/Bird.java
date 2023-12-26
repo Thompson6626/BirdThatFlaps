@@ -8,12 +8,21 @@ import java.io.IOException;
 public class Bird extends Rectangle {
 
     private static final int FLYING_SPEED = -8;
-    private static final int FLOATING_SPEED = 0;
-    private static final int MAX_FALLING_VELOCITY = 9;
+    private static final float FLOATING_SPEED = 0.09f;
+    private static final int MAX_FALLING_VELOCITY = 10;
     private float fallingVelocity = 0f;
 
     private String BIRD_STATUS="falling";
     private static final File BIRD_IMAGE=new File("flappybird.png");
+    private static  BufferedImage BIRD ;
+
+    static{
+        try{
+            BIRD=ImageIO.read(BIRD_IMAGE);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
 
     Bird(int x,int y,int width,int height){
         super(x,y,width,height);
@@ -49,14 +58,6 @@ public class Bird extends Rectangle {
     }
 
     public void draw(Graphics g){
-        BufferedImage birdImage= null;
-
-        try {
-            birdImage = ImageIO.read(BIRD_IMAGE);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        g.drawImage(birdImage,x,y,width,height,null);
+        g.drawImage(BIRD,x,y,width,height,null);
     }
 }

@@ -7,39 +7,51 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.Objects;
-import java.util.Random;
 import java.util.Queue;
+import java.util.Random;
 public class GamePanel extends JPanel implements Runnable {
 
     final static int GAME_WIDTH=650;
     final static int GAME_HEIGHT=740;
-    final static Dimension SCREEN_SIZE= new Dimension(GAME_WIDTH,GAME_HEIGHT);
-
-    Random random;
-    Thread gameThread;
-    Timer timer;
-    Image image;
-    Graphics graphics;
-    Bird bird;
-    Score score;
-    static Queue<Pipes> pipesQueue2= new LinkedList<>();
-    static Queue<Timer> timers;
-    static boolean gameOver=false;
-
+    static Queue<Pipes> PIPESQUEUE2 = new LinkedList<>();
+    static Queue<Timer> TIMERS;
+    static boolean GAMEOVER =false;
     final static int BIRD_DIAMETER=35;
     final static int BIRD_DIAMETER2=45;
     final static int MINIMUM_PIPE_HEIGHT=100;
     final static int PIPE_WIDTH=80;
     final static int SPACE_BETWEEN_PIPES=200;
-    final static int PIPE_SPAWN_TIME=2000;
+    final static int PIPE_SPAWN_TIME=1600;
+
+    final static Dimension SCREEN_SIZE= new Dimension(GAME_WIDTH,GAME_HEIGHT);
+    Random random;
+    Thread gameThread;
+    Timer pipeSpawnerTimer = new Timer(PIPE_SPAWN_TIME, e -> newPipes());
+    Image image;
+    Graphics graphics;
+    Bird bird;
+    Score score;
+
+    private static final File BACKGROUND= new File("flappybirdbg.png");
+
+    private static BufferedImage BACKGROUND_IMAGE;
+
+    static{
+        try{
+            BACKGROUND_IMAGE = ImageIO.read(BACKGROUND);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+
 
     GamePanel(){
-        score= new Score(GAME_WIDTH,GAME_HEIGHT);
+        newScore();
         newBird();
         newPipes();
 
-
+        this.setFocusable(true);
         this.setPreferredSize(SCREEN_SIZE);
         this.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
@@ -48,26 +60,21 @@ public class GamePanel extends JPanel implements Runnable {
             }
         });
 
-
-
-
-        timers= new LinkedList<>();
+        TIMERS = new LinkedList<>();
 
         gameThread=new Thread(this);
         gameThread.start();
 
-        timer = new Timer(PIPE_SPAWN_TIME, e -> {
-            newPipes();
-            repaint();
-        });
-        timer.start();
+        pipeSpawnerTimer.start();
 
-        this.setFocusable(true);
     }
     public void newBird(){
         bird= new Bird(200,(GAME_HEIGHT/2)-BIRD_DIAMETER,BIRD_DIAMETER2,BIRD_DIAMETER);
     }
 
+    public void newScore(){
+        score= new Score(GAME_WIDTH,GAME_HEIGHT);
+    }
 
     public void newPipes(){  // Fix formula later
         random= new Random();
@@ -87,25 +94,20 @@ public class GamePanel extends JPanel implements Runnable {
                 PIPE_WIDTH,
                 GAME_HEIGHT-bottomBlank);
 
-        pipesQueue2.offer(upperPipe);
-        pipesQueue2.offer(lowerPipe);
+        PIPESQUEUE2.offer(upperPipe);
+        PIPESQUEUE2.offer(lowerPipe);
 
     }
 
     public void paint(Graphics g){
+        int width=getWidth();
+        int height=getHeight();
 
-        BufferedImage backgroundImage = null;
-        try {
-            backgroundImage = ImageIO.read(new File("flappybirdbg.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        image = createImage(getWidth(),getHeight());
+        image = createImage(width,height);
         graphics = image.getGraphics();
 
-
-        if (backgroundImage != null) {
-            graphics.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        if (BACKGROUND_IMAGE != null) {
+            graphics.drawImage(BACKGROUND_IMAGE, 0, 0, width, height, this);
         }
 
         draw(graphics);
@@ -115,29 +117,26 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void draw(Graphics g){
         int i=1;
-        for(Pipes pipe:pipesQueue2){
-            if(i%2==0){
-                pipe.draw(g,false);
-            }else{
-                pipe.draw(g,true);
-            }
+        for(Pipes pipe: PIPESQUEUE2){
+            pipe.draw(g, i % 2 != 0);
             i++;
         }
         bird.draw(g);
-        score.draw(g,!gameOver);
+        score.draw(g,!GAMEOVER);
     }
     public void move(){
-        for(Pipes pipe:pipesQueue2){
+        for(Pipes pipe: PIPESQUEUE2){
             pipe.move();
         }
 
         switch(bird.getStatus()){
             case "flying" -> bird.fly();
+            case "falling" -> bird.fall();
             case "floating" -> bird.floatt();
         }
 
-        if(!pipesQueue2.isEmpty()&& bird.x == pipesQueue2.peek().x) {
-            Score.points++;
+        if(!PIPESQUEUE2.isEmpty()&& bird.x == PIPESQUEUE2.peek().x) {
+            Score.POINTS++;
         }
     }
 
@@ -145,18 +144,19 @@ public class GamePanel extends JPanel implements Runnable {
         int flyingTime = 250;
         int floatingTime = flyingTime + 70;
 
-        Timer[] timerss= new Timer[2];
+        Timer[] timers= new Timer[2];
         Timer flyingTimer = new Timer(flyingTime, e -> bird.setStatus("floating"));
         Timer floatingTimer = new Timer(floatingTime, e -> bird.setStatus("falling"));
 
-        timerss[0]=flyingTimer;
-        timerss[1]=floatingTimer;
+        timers[0]=flyingTimer;
+        timers[1]=floatingTimer;
 
-        timers.forEach(Timer::stop);
-        timers.clear();
+        while(!TIMERS.isEmpty()){
+            TIMERS.poll().stop();
+        }
 
-        for(Timer timer:timerss){
-            timers.offer(timer);
+        for(Timer timer:timers){
+            TIMERS.offer(timer);
             timer.setRepeats(false);
             timer.start();
         }
@@ -168,7 +168,8 @@ public class GamePanel extends JPanel implements Runnable {
         if(bird.y<=0){ // So that the bird doesnt go
             bird.y=0;
         }
-        for(Pipes pipes:pipesQueue2){
+
+        for(Pipes pipes: PIPESQUEUE2){
             if(bird.intersects(pipes)){
                 gameOver();
             }
@@ -179,14 +180,14 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
     public void gameOver(){
-        gameOver=true;
+        GAMEOVER =true;
         gameThread.interrupt();
     }
 
     public void checkPipeOutOfBounds(){
-        if (!pipesQueue2.isEmpty() && pipesQueue2.peek().x <= -PIPE_WIDTH) {
-            pipesQueue2.poll(); // Upper pipe
-            pipesQueue2.poll();// Lower pipe
+        if (!PIPESQUEUE2.isEmpty() && PIPESQUEUE2.peek().x <= -PIPE_WIDTH) {
+            PIPESQUEUE2.poll(); // Upper pipe
+            PIPESQUEUE2.poll();// Lower pipe
         }
     }
 
@@ -199,7 +200,7 @@ public class GamePanel extends JPanel implements Runnable {
             double ns = 1000000000 / amountOfTicks;
             double delta = 0;
 
-            while (!gameOver) {
+            while (!GAMEOVER) {
                 long now = System.nanoTime();
                 delta += (now - lastTime) / ns;
                 lastTime = now;
@@ -209,10 +210,6 @@ public class GamePanel extends JPanel implements Runnable {
                     checkPipeOutOfBounds();
                     repaint();
                     delta--;
-
-                    if (bird.getStatus().equals("falling")) {
-                        bird.fall();
-                    }
                 }
             }
     }

@@ -4,7 +4,7 @@ public class Score extends Rectangle {
 
     static int GAME_HEIGHT;
     static int GAME_WIDTH;
-    static int points;
+    static int POINTS;
     final static  Color TEXT_COLOR= new Color(0, 0, 0);
     final static Font TEXT_FONT= new Font("EB Garamond",Font.PLAIN,60);
 
@@ -18,11 +18,11 @@ public class Score extends Rectangle {
         g.setFont(TEXT_FONT);
 
         if(gameRunning){
-            g.drawString(String.valueOf(points),(GAME_WIDTH/2)-10,50);
+            g.drawString(String.valueOf(POINTS),(GAME_WIDTH/2)-10,50);
         }else{
             g.drawString("GAME OVER",(GAME_WIDTH/2)-170,50);
             g.drawString("Final Score",(GAME_WIDTH/2)-125,120);
-            g.drawString(String.valueOf(points),(GAME_WIDTH/2)-20,190);
+            g.drawString(String.valueOf(POINTS),(GAME_WIDTH/2)-20,190);
         }
 
 
