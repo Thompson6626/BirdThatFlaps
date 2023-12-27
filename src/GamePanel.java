@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
+
 public class GamePanel extends JPanel implements Runnable {
 
     final static int GAME_WIDTH=650;
@@ -20,7 +21,7 @@ public class GamePanel extends JPanel implements Runnable {
     final static int BIRD_DIAMETER2=45;
     final static int MINIMUM_PIPE_HEIGHT=100;
     final static int PIPE_WIDTH=80;
-    final static int SPACE_BETWEEN_PIPES=200;
+    final static int SPACE_BETWEEN_PIPES=160;
     final static int PIPE_SPAWN_TIME=1600;
 
     final static Dimension SCREEN_SIZE= new Dimension(GAME_WIDTH,GAME_HEIGHT);
@@ -53,12 +54,7 @@ public class GamePanel extends JPanel implements Runnable {
 
         this.setFocusable(true);
         this.setPreferredSize(SCREEN_SIZE);
-        this.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                bird.keyPressed(e);
-                createTimerForFlying();
-            }
-        });
+        this.addKeyListener(new AL());
 
         TIMERS = new LinkedList<>();
 
@@ -99,11 +95,13 @@ public class GamePanel extends JPanel implements Runnable {
 
     }
 
-    public void paint(Graphics g){
-        int width=getWidth();
-        int height=getHeight();
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        int width = getWidth();
+        int height = getHeight();
 
-        image = createImage(width,height);
+        image = createImage(width, height);
         graphics = image.getGraphics();
 
         if (BACKGROUND_IMAGE != null) {
@@ -112,7 +110,7 @@ public class GamePanel extends JPanel implements Runnable {
 
         draw(graphics);
 
-        g.drawImage(image,0,0,this);
+        g.drawImage(image, 0, 0, this);
     }
 
     public void draw(Graphics g){
@@ -184,6 +182,7 @@ public class GamePanel extends JPanel implements Runnable {
         gameThread.interrupt();
     }
 
+
     public void checkPipeOutOfBounds(){
         if (!PIPESQUEUE2.isEmpty() && PIPESQUEUE2.peek().x <= -PIPE_WIDTH) {
             PIPESQUEUE2.poll(); // Upper pipe
@@ -196,7 +195,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void run(){
 
             long lastTime = System.nanoTime();
-            double amountOfTicks = 60.0;
+            double amountOfTicks = 60;
             double ns = 1000000000 / amountOfTicks;
             double delta = 0;
 
@@ -212,6 +211,16 @@ public class GamePanel extends JPanel implements Runnable {
                     delta--;
                 }
             }
+    }
+
+    private class AL extends KeyAdapter{
+        @Override
+        public void keyPressed(KeyEvent e) {
+            bird.keyPressed(e);
+            createTimerForFlying();
+        }
+
+
     }
 
 }

@@ -24,8 +24,6 @@ public class Score extends Rectangle {
             g.drawString("Final Score",(GAME_WIDTH/2)-125,120);
             g.drawString(String.valueOf(POINTS),(GAME_WIDTH/2)-20,190);
         }
-
-
     }
 
 
