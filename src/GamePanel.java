@@ -21,8 +21,9 @@ public class GamePanel extends JPanel implements Runnable {
     final static int BIRD_DIAMETER2=45;
     final static int MINIMUM_PIPE_HEIGHT=100;
     final static int PIPE_WIDTH=80;
-    final static int SPACE_BETWEEN_PIPES=160;
+    final static int SPACE_BETWEEN_PIPES=200;
     final static int PIPE_SPAWN_TIME=1600;
+    final static int[] BIRD_XY_COORD_STARTING_POS = {200,(GAME_HEIGHT/2)-BIRD_DIAMETER};
 
     final static Dimension SCREEN_SIZE= new Dimension(GAME_WIDTH,GAME_HEIGHT);
     Random random;
@@ -58,14 +59,17 @@ public class GamePanel extends JPanel implements Runnable {
 
         TIMERS = new LinkedList<>();
 
-        gameThread=new Thread(this);
+        gameThread = new Thread(this);
         gameThread.start();
 
         pipeSpawnerTimer.start();
 
     }
     public void newBird(){
-        bird= new Bird(200,(GAME_HEIGHT/2)-BIRD_DIAMETER,BIRD_DIAMETER2,BIRD_DIAMETER);
+        bird= new Bird(BIRD_XY_COORD_STARTING_POS[0],
+                BIRD_XY_COORD_STARTING_POS[1],
+                BIRD_DIAMETER2,
+                BIRD_DIAMETER);
     }
 
     public void newScore(){
@@ -133,8 +137,11 @@ public class GamePanel extends JPanel implements Runnable {
             case "floating" -> bird.floatt();
         }
 
-        if(!PIPESQUEUE2.isEmpty()&& bird.x == PIPESQUEUE2.peek().x) {
-            Score.POINTS++;
+        if(!PIPESQUEUE2.isEmpty() ) {
+            int pipex=PIPESQUEUE2.peek().x;
+            if(bird.x==pipex){
+                Score.POINTS++;
+            }
         }
     }
 
@@ -163,7 +170,7 @@ public class GamePanel extends JPanel implements Runnable {
 
 
     public void checkBirdCollision(){
-        if(bird.y<=0){ // So that the bird doesnt go
+        if(bird.y<=0){ // So that the bird doesnt go way up
             bird.y=0;
         }
 
@@ -180,6 +187,8 @@ public class GamePanel extends JPanel implements Runnable {
     public void gameOver(){
         GAMEOVER =true;
         gameThread.interrupt();
+
+
     }
 
 
@@ -195,7 +204,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void run(){
 
             long lastTime = System.nanoTime();
-            double amountOfTicks = 60;
+            double amountOfTicks = 55;
             double ns = 1000000000 / amountOfTicks;
             double delta = 0;
 
@@ -218,9 +227,32 @@ public class GamePanel extends JPanel implements Runnable {
         public void keyPressed(KeyEvent e) {
             bird.keyPressed(e);
             createTimerForFlying();
+
+            if(GAMEOVER && e.getKeyCode()==KeyEvent.VK_R ){
+                restartAll();
+            }
         }
 
 
+    }
+    private void restartAll(){
+        bird.x = BIRD_XY_COORD_STARTING_POS[0];
+        bird.y = BIRD_XY_COORD_STARTING_POS[1];
+
+        while(!TIMERS.isEmpty()){
+            TIMERS.poll().stop();
+        }
+
+        PIPESQUEUE2.clear();
+
+        Score.POINTS=0;
+
+        GAMEOVER = false;
+
+        bird.setStatus("falling");
+
+        gameThread= new Thread(this);
+        gameThread.start();
     }
 
 }
