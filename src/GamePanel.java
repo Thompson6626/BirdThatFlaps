@@ -133,21 +133,19 @@ public class GamePanel extends JPanel implements Runnable {
 
         switch(bird.getStatus()){
             case "flying" -> bird.fly();
+            case "floating" -> bird.floatingFalling();
             case "falling" -> bird.fall();
-            case "floating" -> bird.floatt();
         }
 
-        if(!PIPESQUEUE2.isEmpty() ) {
-            int pipex=PIPESQUEUE2.peek().x;
-            if(bird.x==pipex){
-                Score.POINTS++;
-            }
+        if(!PIPESQUEUE2.isEmpty() && bird.x == PIPESQUEUE2.peek().x){
+            Score.POINTS++;
         }
+
     }
 
     public void createTimerForFlying() {
-        int flyingTime = 250;
-        int floatingTime = flyingTime + 70;
+        int flyingTime = 150;
+        int floatingTime = flyingTime + 90;
 
         Timer[] timers= new Timer[2];
         Timer flyingTimer = new Timer(flyingTime, e -> bird.setStatus("floating"));

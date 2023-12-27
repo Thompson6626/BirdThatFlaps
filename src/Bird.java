@@ -15,6 +15,9 @@ public class Bird extends Rectangle {
     private String BIRD_STATUS="falling";
     private static final File BIRD_IMAGE=new File("flappybird.png");
     private static  BufferedImage BIRD ;
+    private double rotationAngle = 0.0;
+    private final double MAX_UP_DEGREES= Math.toRadians(-25);
+    private final double  MAX_DOWN_DEGREES=Math.toRadians(65);
 
     static{
         try{
@@ -28,21 +31,6 @@ public class Bird extends Rectangle {
         super(x,y,width,height);
     }
 
-    public void fall() {
-        fallingVelocity += 0.2f;
-        if (fallingVelocity > MAX_FALLING_VELOCITY) {
-            fallingVelocity = MAX_FALLING_VELOCITY;
-        }
-        y += fallingVelocity;
-    }
-
-    public void fly(){
-        y+=FLYING_SPEED;
-        fallingVelocity=0f; // Reseting the falling velocity
-    }
-    public void floatt(){
-        y+=FLOATING_SPEED;
-    }
 
     public void setStatus(String status){
         BIRD_STATUS = status;
@@ -56,8 +44,39 @@ public class Bird extends Rectangle {
             BIRD_STATUS="flying";
         }
     }
+    public void fall() {
+        fallingVelocity += 0.2f;
+        if (fallingVelocity > MAX_FALLING_VELOCITY) {
+            fallingVelocity = MAX_FALLING_VELOCITY;
+        }
+        y += fallingVelocity;
 
-    public void draw(Graphics g){
-        g.drawImage(BIRD,x,y,width,height,null);
+        if(rotationAngle > MAX_DOWN_DEGREES){
+            rotationAngle =  MAX_DOWN_DEGREES;
+        }
+        rotationAngle += Math.toRadians(3);
+    }
+
+    public void fly() {
+        y += FLYING_SPEED;
+        fallingVelocity = 0f; // Reset the falling velocity
+        rotationAngle = MAX_UP_DEGREES;
+    }
+
+    public void floatingFalling() {
+        fallingVelocity += 0.2f;
+        y += fallingVelocity;
+    }
+    public void draw(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g.create();
+
+        // Translate and rotate the graphics context around the bird's center coordinates
+        g2d.translate(x + width / 2, y + height / 2);
+        g2d.rotate(rotationAngle);
+
+        // Draw the bird
+        g2d.drawImage(BIRD, -width / 2, -height / 2, width, height, null);
+
+        g2d.dispose();
     }
 }
