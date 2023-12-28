@@ -2,11 +2,11 @@ import java.awt.*;
 
 public class Score extends Rectangle {
 
-    static int GAME_HEIGHT;
-    static int GAME_WIDTH;
+    private static int GAME_HEIGHT;
+    private static int GAME_WIDTH;
     static double POINTS;
-    final static  Color TEXT_COLOR= new Color(0, 0, 0);
-    final static Font TEXT_FONT= new Font("Work Sans",Font.PLAIN,60);
+    private final static  Color TEXT_COLOR= new Color(0, 0, 0);
+    private final static Font TEXT_FONT= new Font("Work Sans",Font.PLAIN,60);
     FontMetrics metrics;
     static String[] TEXT={"GAME OVER",
                                 "Final Score",
