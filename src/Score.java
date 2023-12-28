@@ -4,11 +4,11 @@ public class Score extends Rectangle {
 
     static int GAME_HEIGHT;
     static int GAME_WIDTH;
-    static int POINTS;
+    static double POINTS;
     final static  Color TEXT_COLOR= new Color(0, 0, 0);
-    final static Font TEXT_FONT= new Font("EB Garamond",Font.PLAIN,60);
+    final static Font TEXT_FONT= new Font("Work Sans",Font.PLAIN,60);
     FontMetrics metrics;
-    final static String[] TEXT={"GAME OVER",
+    static String[] TEXT={"GAME OVER",
                                 "Final Score",
                                 String.valueOf(POINTS),
                                 "Press r to restart"};
@@ -23,17 +23,21 @@ public class Score extends Rectangle {
         g.setFont(TEXT_FONT);
 
         metrics = g.getFontMetrics(g.getFont());
+
+
+        int i=1;
+        int textSize=metrics.getFont().getSize();
+
+        String points = TEXT[2] = String.valueOf((int)POINTS);
+
+
         if(gameRunning){
-            g.drawString(String.valueOf(POINTS),(GAME_WIDTH/2)-10,50);
+            g.drawString(points,( (GAME_WIDTH - metrics.stringWidth(points)) /2 ),textSize);
         }else{
-            int i=1;
-            int textSize=metrics.getFont().getSize();
             for(String str:TEXT){
-                if(i!=4){
-                    g.drawString(str,((GAME_WIDTH-metrics.stringWidth(str))/2),textSize * i++);
-                }else{
-                    g.drawString(str,((GAME_WIDTH-metrics.stringWidth(str))/2),GAME_HEIGHT-textSize);
-                }
+                g.drawString(str,
+                        ( (GAME_WIDTH - metrics.stringWidth(str)) /2 ),
+                        i < 4 ? textSize * i++ : GAME_HEIGHT - textSize);
             }
         }
     }

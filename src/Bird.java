@@ -1,6 +1,5 @@
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -11,17 +10,16 @@ public class Bird extends Rectangle {
     private static final float FLOATING_SPEED = 0.09f;
     private static final int MAX_FALLING_VELOCITY = 10;
     private float fallingVelocity = 0f;
-
-    private String BIRD_STATUS="falling";
-    private static final File BIRD_IMAGE=new File("flappybird.png");
+    private String BIRD_STATUS = "falling";
+    private static final File BIRD_IMAGE = new File("flappybird.png");
     private static  BufferedImage BIRD ;
     private double rotationAngle = 0.0;
-    private final double MAX_UP_DEGREES= Math.toRadians(-25);
-    private final double  MAX_DOWN_DEGREES=Math.toRadians(65);
+    private final double MAX_UP_DEGREES = Math.toRadians(-25);
+    private final double  MAX_DOWN_DEGREES = Math.toRadians(65);
 
     static{
         try{
-            BIRD=ImageIO.read(BIRD_IMAGE);
+            BIRD = ImageIO.read(BIRD_IMAGE);
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -31,6 +29,13 @@ public class Bird extends Rectangle {
         super(x,y,width,height);
     }
 
+    public void setFallingVelocity(float fallingVelocity) {
+        this.fallingVelocity = fallingVelocity;
+    }
+
+    public void setRotationAngle(double rotationAngle) {
+        this.rotationAngle = rotationAngle;
+    }
 
     public void setStatus(String status){
         BIRD_STATUS = status;
@@ -39,11 +44,6 @@ public class Bird extends Rectangle {
         return BIRD_STATUS;
     }
 
-    public void keyPressed(KeyEvent e){
-        if(e.getKeyCode()==KeyEvent.VK_SPACE){
-            BIRD_STATUS="flying";
-        }
-    }
     public void fall() {
         fallingVelocity += 0.2f;
         if (fallingVelocity > MAX_FALLING_VELOCITY) {
@@ -64,8 +64,7 @@ public class Bird extends Rectangle {
     }
 
     public void floatingFalling() {
-        fallingVelocity += 0.2f;
-        y += fallingVelocity;
+        y += FLOATING_SPEED;
     }
     public void draw(Graphics g) {
         Graphics2D g2d = (Graphics2D) g.create();
@@ -77,6 +76,5 @@ public class Bird extends Rectangle {
         // Draw the bird
         g2d.drawImage(BIRD, -width / 2, -height / 2, width, height, null);
 
-        g2d.dispose();
     }
 }

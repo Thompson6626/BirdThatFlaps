@@ -7,7 +7,7 @@ public class GameFrame extends JFrame {
     GameFrame(){
         panel= new GamePanel();
         this.add(panel);
-        this.setTitle("Game");
+        this.setTitle("Generic flying species game");
         this.setResizable(false);
         this.setBackground(new Color(30, 176, 195));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

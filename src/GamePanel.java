@@ -1,5 +1,6 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -9,23 +10,25 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
+import java.util.Stack;
 
 public class GamePanel extends JPanel implements Runnable {
 
     final static int GAME_WIDTH=650;
     final static int GAME_HEIGHT=740;
     static Queue<Pipes> PIPESQUEUE2 = new LinkedList<>();
-    static Queue<Timer> TIMERS;
+    static Stack<Timer> TIMERS;
     static boolean GAMEOVER =false;
-    final static int BIRD_DIAMETER=35;
-    final static int BIRD_DIAMETER2=45;
+    final static int BIRD_HEIGHT =35;
+    final static int BIRD_WIDTH =45;
     final static int MINIMUM_PIPE_HEIGHT=100;
     final static int PIPE_WIDTH=80;
-    final static int SPACE_BETWEEN_PIPES=200;
+    final static int SPACE_BETWEEN_PIPES=150;
     final static int PIPE_SPAWN_TIME=1600;
-    final static int[] BIRD_XY_COORD_STARTING_POS = {200,(GAME_HEIGHT/2)-BIRD_DIAMETER};
+    final static int GROUND_HEIGHT=75;
+    final static int[] BIRD_XY_COORD_STARTING_POS = {200,(GAME_HEIGHT/2)- BIRD_HEIGHT};
 
-    final static Dimension SCREEN_SIZE= new Dimension(GAME_WIDTH,GAME_HEIGHT);
+    final static Dimension SCREEN_SIZE = new Dimension(GAME_WIDTH,GAME_HEIGHT);
     Random random;
     Thread gameThread;
     Timer pipeSpawnerTimer = new Timer(PIPE_SPAWN_TIME, e -> newPipes());
@@ -57,7 +60,7 @@ public class GamePanel extends JPanel implements Runnable {
         this.setPreferredSize(SCREEN_SIZE);
         this.addKeyListener(new AL());
 
-        TIMERS = new LinkedList<>();
+        TIMERS = new Stack<>();
 
         gameThread = new Thread(this);
         gameThread.start();
@@ -66,10 +69,10 @@ public class GamePanel extends JPanel implements Runnable {
 
     }
     public void newBird(){
-        bird= new Bird(BIRD_XY_COORD_STARTING_POS[0],
-                BIRD_XY_COORD_STARTING_POS[1],
-                BIRD_DIAMETER2,
-                BIRD_DIAMETER);
+        bird= new Bird(BIRD_XY_COORD_STARTING_POS[0], // x bird position
+                BIRD_XY_COORD_STARTING_POS[1],  // y position
+                BIRD_WIDTH,     // bird width
+                BIRD_HEIGHT);     // bird height
     }
 
     public void newScore(){
@@ -79,20 +82,20 @@ public class GamePanel extends JPanel implements Runnable {
     public void newPipes(){  // Fix formula later
         random= new Random();
 
-        int blankSpaceTop=(random.nextInt(
-                GAME_HEIGHT-SPACE_BETWEEN_PIPES-MINIMUM_PIPE_HEIGHT)+MINIMUM_PIPE_HEIGHT);
+        int topYFromSpaceBetweenPipes=(random.nextInt(
+                GAME_HEIGHT - GROUND_HEIGHT - SPACE_BETWEEN_PIPES - MINIMUM_PIPE_HEIGHT) + MINIMUM_PIPE_HEIGHT);
 
-        int bottomBlank=blankSpaceTop+SPACE_BETWEEN_PIPES;
+        int bottomYFromSpaceBetweenPipes = topYFromSpaceBetweenPipes+SPACE_BETWEEN_PIPES;
 
-        Pipes upperPipe =new Pipes(GAME_WIDTH, // UpperPIPE
+        Pipes upperPipe =new Pipes(GAME_WIDTH,
                 0,
                 PIPE_WIDTH,
-                blankSpaceTop);
+                topYFromSpaceBetweenPipes);
 
         Pipes lowerPipe=new Pipes(GAME_WIDTH,
-                bottomBlank,
+                bottomYFromSpaceBetweenPipes,
                 PIPE_WIDTH,
-                GAME_HEIGHT-bottomBlank);
+                GAME_HEIGHT-bottomYFromSpaceBetweenPipes-GROUND_HEIGHT);
 
         PIPESQUEUE2.offer(upperPipe);
         PIPESQUEUE2.offer(lowerPipe);
@@ -117,6 +120,7 @@ public class GamePanel extends JPanel implements Runnable {
         g.drawImage(image, 0, 0, this);
     }
 
+    //Method to paint the bird ,pipes and score
     public void draw(Graphics g){
         int i=1;
         for(Pipes pipe: PIPESQUEUE2){
@@ -126,8 +130,12 @@ public class GamePanel extends JPanel implements Runnable {
         bird.draw(g);
         score.draw(g,!GAMEOVER);
     }
+    // Method to move the pipes and the bird
     public void move(){
         for(Pipes pipe: PIPESQUEUE2){
+            if(pipe.x == bird.x){ // If a pipe mid point is the same as the birds x position
+                Score.POINTS += 0.5;  // Add half a point for each pipe (upper and lower)
+            }
             pipe.move();
         }
 
@@ -137,15 +145,11 @@ public class GamePanel extends JPanel implements Runnable {
             case "falling" -> bird.fall();
         }
 
-        if(!PIPESQUEUE2.isEmpty() && bird.x == PIPESQUEUE2.peek().x){
-            Score.POINTS++;
-        }
-
     }
 
     public void createTimerForFlying() {
         int flyingTime = 150;
-        int floatingTime = flyingTime + 90;
+        int floatingTime = flyingTime + 100;
 
         Timer[] timers= new Timer[2];
         Timer flyingTimer = new Timer(flyingTime, e -> bird.setStatus("floating"));
@@ -155,11 +159,11 @@ public class GamePanel extends JPanel implements Runnable {
         timers[1]=floatingTimer;
 
         while(!TIMERS.isEmpty()){
-            TIMERS.poll().stop();
+            TIMERS.pop().stop();
         }
 
         for(Timer timer:timers){
-            TIMERS.offer(timer);
+            TIMERS.push(timer);
             timer.setRepeats(false);
             timer.start();
         }
@@ -178,7 +182,7 @@ public class GamePanel extends JPanel implements Runnable {
             }
         }
 
-        if(bird.y>=GAME_HEIGHT-BIRD_DIAMETER){
+        if(bird.y>=GAME_HEIGHT- BIRD_HEIGHT -GROUND_HEIGHT){
             gameOver();
         }
     }
@@ -202,7 +206,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void run(){
 
             long lastTime = System.nanoTime();
-            double amountOfTicks = 55;
+            double amountOfTicks = 60;
             double ns = 1000000000 / amountOfTicks;
             double delta = 0;
 
@@ -223,33 +227,36 @@ public class GamePanel extends JPanel implements Runnable {
     private class AL extends KeyAdapter{
         @Override
         public void keyPressed(KeyEvent e) {
-            bird.keyPressed(e);
-            createTimerForFlying();
+            if(e.getKeyCode() == KeyEvent.VK_SPACE){
+                bird.setStatus("flying");
+                createTimerForFlying();
+            }
 
-            if(GAMEOVER && e.getKeyCode()==KeyEvent.VK_R ){
-                restartAll();
+            if( GAMEOVER && e.getKeyCode() == KeyEvent.VK_R ){
+                restart();
             }
         }
 
-
     }
-    private void restartAll(){
+    private void restart(){
         bird.x = BIRD_XY_COORD_STARTING_POS[0];
         bird.y = BIRD_XY_COORD_STARTING_POS[1];
 
-        while(!TIMERS.isEmpty()){
-            TIMERS.poll().stop();
+        while(!TIMERS.isEmpty()){  // Deleting all timers on the stack and stopping them so no remnants when restarting
+            TIMERS.pop().stop();
         }
 
-        PIPESQUEUE2.clear();
+        PIPESQUEUE2.clear(); // Deleting all current pipes being displayed
 
-        Score.POINTS=0;
+        Score.POINTS=0;  // Reseting points
 
-        GAMEOVER = false;
+        GAMEOVER = false; // Reseting game status
 
-        bird.setStatus("falling");
+        bird.setStatus("falling"); // Default bird status
+        bird.setFallingVelocity(0f); // Reseting falling velocity
+        bird.setRotationAngle(0);
 
-        gameThread= new Thread(this);
+        gameThread = new Thread(this);
         gameThread.start();
     }
 
